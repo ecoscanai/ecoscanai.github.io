@@ -712,40 +712,52 @@ $('#product-packaging').textContent = `${packScore}/100`;
 $('#product-transport').textContent = `${transScore}/100`;
     $('#product-disposal').textContent = `${dispScore}/100`;
 
-    // Alternatives
+    // --- THIS IS THE CORRECT IMPLEMENTATION ---
+
     const altList = $('#product-alternatives-list');
 const altContainer = $('#product-alternatives-container');
-    altList.innerHTML = ''; // Clear previous
+    altList.innerHTML = ''; // Clear previous alternatives
 
     if (alternatives && alternatives.length > 0) {
         alternatives.forEach(alt => {
             
-            // --- THIS IS THE ONLY PART THAT CHANGED ---
+            // 1. Create the card element
+            const altCardDiv = document.createElement('div');
+            altCardDiv.className = "flex-shrink-0 w-48 bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors";
 
-            const altCard = ` 
-                <div class="flex-shrink-0 w-48 bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
-                     onclick="closeModal(); handleBarcodeScan('${alt.barcode}')"> 
-                     
-                    <img src="${alt.image_url || 'https://placehold.co/200x200/eeeeee/cccccc?text=No+Image'}" alt="${alt.name}" class="w-full h-24 object-cover rounded-md mb-3">
-                    <h5 class="font-semibold text-sm">${alt.name}</h5>
-                    <p class="text-xs text-gray-500 mb-2">${alt.brand_name}</p>
-                    <div class="text-lg font-bold text-gray-800">${alt.score}</div>
-                </div>
+            // 2. Set its HTML content
+            altCardDiv.innerHTML = `
+                <img src="${alt.image_url || 'https://placehold.co/200x200/eeeeee/cccccc?text=No+Image'}" alt="${alt.name}" class="w-full h-24 object-cover rounded-md mb-3">
+                <h5 class="font-semibold text-sm">${alt.name}</h5>
+                <p class="text-xs text-gray-500 mb-2">${alt.brand_name}</p>
+                <div class="text-lg font-bold text-gray-800">${alt.score}</div>
             `;
             
-            // --- END OF CHANGE ---
+            // 3. Add the click listener
+            // This tells the card to:
+            //    - First, run your 'closeModal' function
+            //    - Second, run your 'handleBarcodeScan' function with the alternative's barcode
+            altCardDiv.addEventListener('click', () => {
+                closeModal();
+                handleBarcodeScan(alt.barcode);
+            });
 
-    altList.innerHTML += altCard;
+            // 4. Add the new card to the list
+    altList.appendChild(altCardDiv);
         });
+        
         altContainer.classList.remove('hidden');
     } else {
 altContainer.classList.add('hidden');
     }
+    
+    // --- END OF FIX ---
 
     // Show the modal
 productModal.classList.remove('hidden');
     productModal.querySelector('.modal-content').classList.add('scale-100');
 }
+
             /**
              * Renders the user's dashboard with their info.
              */
