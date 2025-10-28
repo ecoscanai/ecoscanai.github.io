@@ -141,6 +141,9 @@
                         <img id="product-img" src="https://placehold.co/400x400/eeeeee/cccccc?text=Product" alt="Product Image" class="w-full h-64 object-cover rounded-lg mb-4">
                         <h2 id="product-name" class="text-2xl font-bold mb-1">Product Name</h2>
                         <p id="product-brand" class="text-lg text-gray-600 mb-4">Brand Name</p>
+                        <h2 id="product-name" class="text-3xl font-bold mb-1"></h2>
+                         <p id="product-brand" class="text-lg text-gray-500 mb-2"></p>
+                        <p id="product-price" class="text-3xl font-bold text-green-600 mb-4"></p>
                         <p class="text-sm text-gray-500">Barcode: <span id="product-barcode"></span></p>
                     </div>
 
@@ -693,29 +696,34 @@ function renderProductModal(data) {
     if (!product) return;
 
     // Calculate score breakdown
-const packScore = getPackagingScore(product.packaging_material);
-const transScore = getTransportScore(product.manufacturing_location);
+    const packScore = getPackagingScore(product.packaging_material);
+    const transScore = getTransportScore(product.manufacturing_location);
     const dispScore = getDisposalScore(product.disposal_method);
 
     // Main product info
     $('#product-img').src = product.image_url || 'https://placehold.co/400x400/eeeeee/cccccc?text=No+Image';
     $('#product-name').textContent = product.name;
-$('#product-brand').textContent = product.brand_name;
+    $('#product-brand').textContent = product.brand_name;
     $('#product-barcode').textContent = product.barcode;
+    
+    // --- ADD THIS LINE FOR MAIN PRICE ---
+    if ($('#product-price')) { // Checks if you added the HTML element
+        $('#product-price').textContent = `$${product.price.toFixed(2)}`; // <-- NEW
+    }
     
     // Use the top-level score and rating from the API
     $('#product-score').textContent = data.score;
     $('#product-score-rating').textContent = data.score_rating;
 
     // Score breakdown
-$('#product-packaging').textContent = `${packScore}/100`;
-$('#product-transport').textContent = `${transScore}/100`;
+    $('#product-packaging').textContent = `${packScore}/100`;
+    $('#product-transport').textContent = `${transScore}/100`;
     $('#product-disposal').textContent = `${dispScore}/100`;
 
-    // --- THIS IS THE CORRECT IMPLEMENTATION ---
-
+    // ---
+    
     const altList = $('#product-alternatives-list');
-const altContainer = $('#product-alternatives-container');
+    const altContainer = $('#product-alternatives-container');
     altList.innerHTML = ''; // Clear previous alternatives
 
     if (alternatives && alternatives.length > 0) {
@@ -730,31 +738,29 @@ const altContainer = $('#product-alternatives-container');
                 <img src="${alt.image_url || 'https://placehold.co/200x200/eeeeee/cccccc?text=No+Image'}" alt="${alt.name}" class="w-full h-24 object-cover rounded-md mb-3">
                 <h5 class="font-semibold text-sm">${alt.name}</h5>
                 <p class="text-xs text-gray-500 mb-2">${alt.brand_name}</p>
-                <div class="text-lg font-bold text-gray-800">${alt.score}</div>
-            `;
+                <div class="text-lg font-bold text-gray-800 mb-1">${alt.score}</div>
+                <p class="text-md font-semibold text-green-600">$${alt.price.toFixed(2)}</p> 
+            `; // <-- NEW
             
-            // 3. Add the click listener
-            // This tells the card to:
-            //    - First, run your 'closeModal' function
-            //    - Second, run your 'handleBarcodeScan' function with the alternative's barcode
+            // 3. Add the click listener (Your code is already correct here)
             altCardDiv.addEventListener('click', () => {
                 closeModal();
                 handleBarcodeScan(alt.barcode);
             });
 
             // 4. Add the new card to the list
-    altList.appendChild(altCardDiv);
+            altList.appendChild(altCardDiv);
         });
         
         altContainer.classList.remove('hidden');
     } else {
-altContainer.classList.add('hidden');
+        altContainer.classList.add('hidden');
     }
     
     // --- END OF FIX ---
 
     // Show the modal
-productModal.classList.remove('hidden');
+    productModal.classList.remove('hidden');
     productModal.querySelector('.modal-content').classList.add('scale-100');
 }
 
