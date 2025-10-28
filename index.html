@@ -879,17 +879,15 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
             // === BARCODE SCANNER LOGIC ===
 
             const onScanSuccess = (decodedText, decodedResult) => {
-    console.log(`Scan result: ${decodedText}`, decodedResult);
+    console.log("Scan result:", decodedText, decodedResult);
 
-    // Only accept Bangladeshi EAN-13 barcodes
-    if (/^894\d{10}$/.test(decodedText)) {
-        scannerStatus.textContent = `Bangladeshi product detected: ${decodedText}`;
-        fetchProductByBarcode(decodedText);
-    } else {
-        scannerStatus.textContent = "Not a Bangladeshi EAN-13 barcode.";
-        console.warn("Ignored non-Bangladeshi barcode:", decodedText);
-    }
+    // Show the raw result
+    scannerStatus.textContent = `Found barcode: ${decodedText}`;
+
+    // Pass it to your backend lookup
+    fetchProductByBarcode(decodedText);
 };
+
 
 
             const onScanFailure = (error) => {
