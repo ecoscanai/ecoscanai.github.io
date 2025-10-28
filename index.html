@@ -896,7 +896,7 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
                 scannerStatus.textContent = "Scanning... Align barcode in the box.";
             };
 
-            function startScanner() {
+           function startScanner() {
     if (isScannerRunning) return;
 
     Html5Qrcode.getCameras().then(cameras => {
@@ -912,15 +912,15 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
             html5QrCode.start(
                 preferredCam.id,
                 {
-                    fps: 15, // faster frame rate for smoother detection
-                    qrbox: (viewfinderWidth, viewfinderHeight) => {
-                        // Wide and shallow box for linear barcodes
-                        return {
-                            width: Math.floor(viewfinderWidth * 0.9),
-                            height: Math.floor(viewfinderHeight * 0.25)
-                        };
-                    },
-                    aspectRatio: 1.7778 // 16:9 ratio helps barcode scanning
+                    fps: 15, // smoother detection
+                    qrbox: { width: 500, height: 150 }, // wide + shallow box for barcodes
+                    aspectRatio: 1.7778, // 16:9 ratio helps linear codes
+                    videoConstraints: {
+                        facingMode: "environment", // back camera on mobile
+                        width: { ideal: 1920 },     // request Full HD
+                        height: { ideal: 1080 },
+                        advanced: [{ zoom: 2.0 }]   // try 2x digital zoom (if supported)
+                    }
                 },
                 onScanSuccess,
                 onScanFailure
@@ -945,6 +945,7 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
         startScannerBtn.classList.remove('hidden');
     });
 }
+
 
 
             function stopScanner() {
