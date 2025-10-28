@@ -689,81 +689,127 @@
  * Renders the product modal with product data and alternatives.
 * @param {object} data - The entire API response object from your Go backend
  */
+/**
+ * Renders the product modal with product data and alternatives.
+ * @param {object} data - The entire API response object from your Go backend
+ */
+/**
+ * Renders the product modal with product data and alternatives.
+ * @param {object} data - The entire API response object from your Go backend
+ */
 function renderProductModal(data) {
     const product = data.product;
     const alternatives = data.alternatives || [];
-
     if (!product) return;
+
+    // --- Helper function (Pure JavaScript) ---
+    const $ = (selector) => document.getElementById(selector);
 
     // Calculate score breakdown
     const packScore = getPackagingScore(product.packaging_material);
     const transScore = getTransportScore(product.manufacturing_location);
     const dispScore = getDisposalScore(product.disposal_method);
 
-    // Main product info
-    $('#product-img').src = product.image_url || 'https://placehold.co/400x400/eeeeee/cccccc?text=No+Image';
-    $('#product-name').textContent = product.name;
-    $('#product-brand').textContent = product.brand_name;
-    $('#product-barcode').textContent = product.barcode;
-    
-    // --- ADD THIS LINE FOR MAIN PRICE ---
-    if ($('#product-price')) { // Checks if you added the HTML element
-        $('#product-price').textContent = `$${product.price.toFixed(2)}`; // <-- NEW
+    // --- Main Product Info ---
+    $('product-img').src = product.image_url || 'https://placehold.co/400x400/eeeeee/cccccc?text=No+Image';
+    $('product-name').textContent = product.name;
+    $('product-brand').textContent = product.brand_name;
+    $('product-barcode').textContent = product.barcode;
+
+    // Main product price
+    const priceEl = $('product-price');
+    if (priceEl) {
+        priceEl.textContent = `$${product.price.toFixed(2)}`;
     }
-    
-    // Use the top-level score and rating from the API
-    $('#product-score').textContent = data.score;
-    $('#product-score-rating').textContent = data.score_rating;
+
+    // Main score
+    $('product-score').textContent = data.score;
+    $('product-score-rating').textContent = data.score_rating;
 
     // Score breakdown
-    $('#product-packaging').textContent = `${packScore}/100`;
-    $('#product-transport').textContent = `${transScore}/100`;
-    $('#product-disposal').textContent = `${dispScore}/100`;
+    $('product-packaging').textContent = `${packScore}/100`;
+    $('product-transport').textContent = `${transScore}/100`;
+    $('product-disposal').textContent = `${dispScore}/100`;
 
-    // ---
-    
-    const altList = $('#product-alternatives-list');
-    const altContainer = $('#product-alternatives-container');
-    altList.innerHTML = ''; // Clear previous alternatives
+    // --- Alternatives Section (The Fix) ---
+    const altList = $('product-alternatives-list');
+    const altContainer = $('product-alternatives-container');
+
+    // 1. Clear the list of old alternatives
+    altList.innerHTML = '';
+
+    // 2. Clone the list to remove all old event listeners
+    const newAltList = altList.cloneNode(false);
+    altList.parentNode.replaceChild(newAltList, altList);
 
     if (alternatives && alternatives.length > 0) {
+        // 3. Add all the new alternative cards
         alternatives.forEach(alt => {
-            
-            // 1. Create the card element
-            const altCardDiv = document.createElement('div');
-            altCardDiv.className = "flex-shrink-0 w-48 bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors";
-
-            // 2. Set its HTML content
-            altCardDiv.innerHTML = `
-                <img src="${alt.image_url || 'https://placehold.co/200x200/eeeeee/cccccc?text=No+Image'}" alt="${alt.name}" class="w-full h-24 object-cover rounded-md mb-3">
-                <h5 class="font-semibold text-sm">${alt.name}</h5>
-                <p class="text-xs text-gray-500 mb-2">${alt.brand_name}</p>
-                <div class="text-lg font-bold text-gray-800 mb-1">${alt.score}</div>
-                <p class="text-md font-semibold text-green-600">$${alt.price.toFixed(2)}</p> 
-            `; // <-- NEW
-            
-            // 3. Add the click listener (Your code is already correct here)
-            altCardDiv.addEventListener('click', () => {
-                closeModal();
-                handleBarcodeScan(alt.barcode);
-            });
-
-            // 4. Add the new card to the list
-            altList.appendChild(altCardDiv);
+            newAltList.innerHTML += `
+<div class="flex-shrink-0 w-48 bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors alt-card" data-barcode="${alt.barcode}">
+ <img src="${alt.image_url || 'https://placehold.co/200x200/eeeeee/cccccc?text=No+Image'}" alt="${alt.name}" class="w-full h-24 object-cover rounded-md mb-3" />
+ <h5 class="font-semibold text-sm">${alt.name}</h5>
+ <p class="text-xs text-gray-500 mb-2">${alt.brand_name}</p>
+ <div class="text-lg font-bold text-gray-800 mb-1">${alt.score}</div>
+ <p class="text-md font-semibold text-green-600">$${alt.price.toFixed(2)}</p>
+ </div>
+ `;
         });
-        
+
+        // 4. Add ONE SINGLE click listener to the entire list
+        newAltList.addEventListener('click', (e) => {
+            const card = e.target.closest('.alt-card');
+            if (card) {
+                const barcode = card.dataset.barcode;
+                
+                // --- THIS IS THE LOGIC YOU ASKED FOR ---
+                // 1. Close the current modal
+                closeModal(); // Assumes you have a closeModal() function
+                
+                // 2. Fetch the new product using its barcode
+                fetch(`https://ecoscan-an-eco-friendly-product-scanner.onrender.com/api/v1/products/barcode/${barcode}`)
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error('Product not found');
+                        }
+                        return res.json();
+                    })
+                    .then(productData => {
+                        // 3. Open the modal again with the NEW data
+                        renderProductModal(productData);
+                    })
+                    .catch(err => {
+                        console.error("Error fetching alternative product:", err);
+                        // You should probably show an error message to the user here
+                    });
+            }
+        });
+
         altContainer.classList.remove('hidden');
     } else {
         altContainer.classList.add('hidden');
     }
-    
-    // --- END OF FIX ---
 
-    // Show the modal
+    // --- Show the modal ---
+    // (Assuming 'productModal' is a global variable holding the modal element)
     productModal.classList.remove('hidden');
     productModal.querySelector('.modal-content').classList.add('scale-100');
 }
 
+        function closeModal() {
+    // This assumes your main modal element has the ID "productModal"
+    const modal = $('productModal'); 
+    
+    if (modal) {
+        modal.classList.add('hidden');
+        
+        // This resets the animation for the next time it opens
+        const modalContent = modal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.classList.remove('scale-100');
+        }
+    }
+}
             /**
              * Renders the user's dashboard with their info.
              */
