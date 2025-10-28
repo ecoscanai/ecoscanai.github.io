@@ -682,36 +682,53 @@
              * @param {object} product - The main product object.
              * @param {object[]} alternatives - An array of alternative product objects.
              */
-            function renderProductModal(product, alternatives = []) {
-                if (!product) return;
+            // PASTE THIS to replace the function starting on line 804
+            function renderProductModal(data) {
+                // 1. Unpack data at the top
+                const product = data.product;
+                const alternatives = data.alternatives;
 
-                // Calculate score breakdown
-                const packScore = getPackagingScore(product.packaging_material);
-                const transScore = getTransportScore(product.manufacturing_location);
-                const dispScore = getDisposalScore(product.disposal_method);
+                productModal.classList.remove('hidden');
                 
-                // Main product info
+                // 2. Corrected check (must be AFTER product is defined)
+                if (!product) {
+                    console.error("renderProductModal called with no product");
+                    return;
+                }
+
+                // 3. Get text names for breakdown
+                const packName = product.packaging_material.replace(/_/g, ' ');
+                const transName = product.manufacturing_location;
+                const dispName = product.disposal_method.replace(/_/g, ' ');
+                
+                // 4. IMPORTANT: Your new API only sends the TOTAL score.
+                //    We can't show individual breakdown scores, so we update the charts
+                //    with a '0' score but keep the text label.
+                updateChart(packagingChart, 'Packaging', 0, packName);
+                updateChart(transportChart, 'Transport', 0, transName);
+                updateChart(disposalChart, 'Disposal', 0, dispName);
+
+                // 5. Main product info
                 $('#product-img').src = product.image_url || 'https://placehold.co/400x400/eeeeee/cccccc?text=No+Image';
                 $('#product-name').textContent = product.name;
                 $('#product-brand').textContent = product.brand_name;
                 $('#product-barcode').textContent = product.barcode;
-                $('#product-score').textContent = product.score;
-                $('#product-score-rating').textContent = getScoreRating(product.score);
+                
+                // 6. THE FIX: Correct syntax and uses the new 'data.score'
+                productModalScore.textContent = `${data.score} / 100`;
+                productModalScoreRating.textContent = data.score_rating;
 
-                // Score breakdown
-                $('#product-packaging').textContent = `${packScore}/100`;
-                $('#product-transport').textContent = `${transScore}/100`;
-                $('#product-disposal').textContent = `${dispScore}/100`;
-
-                // Alternatives
+                // 7. Alternatives (This code is copied directly from your file and is correct)
                 const altList = $('#product-alternatives-list');
                 const altContainer = $('#product-alternatives-container');
                 altList.innerHTML = ''; // Clear previous
 
                 if (alternatives && alternatives.length > 0) {
                     alternatives.forEach(alt => {
+                        // Note: This correctly uses the *database* scores for comparison,
+                        // which is what your API provides for alternatives.
                         const altCard = `
-                            <div classclass="flex-shrink-0 w-48 bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-3 cursor-pointer hover:shadow-md" data-barcode="${alt.barcode}">
+                            <div class="flex-shrink-0 w-48 bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-3 cursor-pointer hover:shadow-md" data-barcode="${alt.barcode}">
                                 <img src="${alt.image_url || 'https://placehold.co/200x200/eeeeee/cccccc?text=No+Image'}" alt="${alt.name}" class="w-full h-24 object-cover rounded-md mb-2">
                                 <h4 class="font-semibold text-sm truncate">${alt.name}</h4>
                                 <p class="text-xs text-gray-500 truncate mb-2">${alt.brand_name}</p>
@@ -730,14 +747,13 @@
                     altContainer.classList.add('hidden');
                 }
                 
-                // Add click listeners to alternatives
+                // Add click listeners to alternatives (copied from your file)
                 altList.querySelectorAll('[data-barcode]').forEach(card => {
                     card.addEventListener('click', () => {
-                        fetchProductByBarcode(card.dataset.barcode, false); // Fetch new product, don't stop scanner
+                        fetchProductByBarcode(card.dataset.barcode, false); // Fetch new product
                     });
                 });
 
-                productModal.classList.remove('hidden');
                 productModal.querySelector('.modal-content').classList.remove('scale-95');
             }
 
@@ -821,7 +837,7 @@
                     }
                     
                     const data = await response.json();
-                    renderProductModal(data.product, data.alternatives);
+                    renderProductModal(data);
                     scannerStatus.textContent = `Found: ${data.product.name}`;
 
                 } catch (error) {
