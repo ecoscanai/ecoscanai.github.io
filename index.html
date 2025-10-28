@@ -827,7 +827,7 @@ productModal.classList.remove('hidden');
                     }
                     
                     // NEW WAY (Example)
-const data = await res.json();
+const data = await response.json();
 renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
                     scannerStatus.textContent = `Found: ${data.product.name}`;
 
