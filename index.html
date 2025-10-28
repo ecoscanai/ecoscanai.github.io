@@ -892,48 +892,61 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
             };
 
             function startScanner() {
-                if (isScannerRunning) return;
-                
-                // Request camera permissions
-                Html5Qrcode.getCameras().then(cameras => {
-                    if (cameras && cameras.length) {
-                        // Use the 'environment' (back) camera if available
-                        const cameraId = cameras.find(c => c.label.toLowerCase().includes('back'))?.id || cameras[0].id;
-                        
-                        html5QrCode = new Html5Qrcode("reader");
-                        html5QrCode.start(
-                            cameraId,
-                            {
-                                fps: 10,
-                                qrbox: (viewfinderWidth, viewfinderHeight) => {
-                                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                                    const qrboxSize = Math.floor(minEdge * 0.8);
-                                    return { width: qrboxSize, height: qrboxSize * 0.5 }; // Rectangular box for barcodes
-                                }
-                            },
-                            onScanSuccess,
-                            onScanFailure
-                        )
-                        .then(() => {
-                            isScannerRunning = true;
-                            startScannerBtn.classList.add('hidden');
-                            scannerStatus.textContent = "Scanning...";
-                            reader.style.borderColor = "#4CAF50";
-                        })
-                        .catch(err => {
-                            console.error("Failed to start scanner:", err);
-                            scannerStatus.textContent = `Error: ${err}. Try refreshing.`;
-                            reader.style.borderColor = "#ef4444";
-                        });
-                    } else {
-                        scannerStatus.textContent = "No cameras found on this device.";
-                    }
-                }).catch(err => {
-                    console.error("Error getting cameras:", err);
-                    scannerStatus.textContent = "Camera permission denied or error.";
-                    startScannerBtn.classList.remove('hidden');
-                });
+    if (isScannerRunning) return;
+
+    Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+            console.log("Available cameras:", cameras);
+
+            // Prefer wide/ultra-wide if available
+            let preferredCam = cameras.find(c =>
+                c.label.toLowerCase().includes("wide")
+            );
+
+            // If no wide, prefer back camera
+            if (!preferredCam) {
+                preferredCam = cameras.find(c =>
+                    c.label.toLowerCase().includes("back")
+                );
             }
+
+            // Fallback to the first camera
+            const cameraId = preferredCam?.id || cameras[0].id;
+
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                cameraId,
+                {
+                    fps: 10,
+                    qrbox: (viewfinderWidth, viewfinderHeight) => {
+                        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                        const qrboxSize = Math.floor(minEdge * 0.8);
+                        return { width: qrboxSize, height: qrboxSize * 0.5 };
+                    }
+                },
+                onScanSuccess,
+                onScanFailure
+            )
+            .then(() => {
+                isScannerRunning = true;
+                startScannerBtn.classList.add('hidden');
+                scannerStatus.textContent = "Scanning...";
+                reader.style.borderColor = "#4CAF50";
+            })
+            .catch(err => {
+                console.error("Failed to start scanner:", err);
+                scannerStatus.textContent = `Error: ${err}. Try refreshing.`;
+                reader.style.borderColor = "#ef4444";
+            });
+        } else {
+            scannerStatus.textContent = "No cameras found on this device.";
+        }
+    }).catch(err => {
+        console.error("Error getting cameras:", err);
+        scannerStatus.textContent = "Camera permission denied or error.";
+        startScannerBtn.classList.remove('hidden');
+    });
+}
 
             function stopScanner() {
                 if (!html5QrCode || !isScannerRunning) return;
