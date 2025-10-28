@@ -879,11 +879,18 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
             // === BARCODE SCANNER LOGIC ===
 
             const onScanSuccess = (decodedText, decodedResult) => {
-                // `decodedText` is the barcode
-                console.log(`Scan result: ${decodedText}`, decodedResult);
-                scannerStatus.textContent = `Found barcode: ${decodedText}`;
-                fetchProductByBarcode(decodedText);
-            };
+    console.log(`Scan result: ${decodedText}`, decodedResult);
+
+    // Only accept Bangladeshi EAN-13 barcodes
+    if (/^894\d{10}$/.test(decodedText)) {
+        scannerStatus.textContent = `Bangladeshi product detected: ${decodedText}`;
+        fetchProductByBarcode(decodedText);
+    } else {
+        scannerStatus.textContent = "Not a Bangladeshi EAN-13 barcode.";
+        console.warn("Ignored non-Bangladeshi barcode:", decodedText);
+    }
+};
+
 
             const onScanFailure = (error) => {
                 // This will fire continuously, don't log it unless debugging
