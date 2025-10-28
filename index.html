@@ -896,30 +896,37 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
                 scannerStatus.textContent = "Scanning... Align barcode in the box.";
             };
 
-           function startScanner() {
+            function startScanner() {
     if (isScannerRunning) return;
 
     Html5Qrcode.getCameras().then(cameras => {
         if (cameras && cameras.length) {
             console.log("Available cameras:", cameras);
 
-            // Prefer back camera for barcodes
+            // Prefer wide/ultra-wide if available
             let preferredCam = cameras.find(c =>
-                c.label.toLowerCase().includes("back")
-            ) || cameras[0];
+                c.label.toLowerCase().includes("wide")
+            );
+
+            // If no wide, prefer back camera
+            if (!preferredCam) {
+                preferredCam = cameras.find(c =>
+                    c.label.toLowerCase().includes("back")
+                );
+            }
+
+            // Fallback to the first camera
+            const cameraId = preferredCam?.id || cameras[0].id;
 
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start(
-                preferredCam.id,
+                cameraId,
                 {
-                    fps: 15, // smoother detection
-                    qrbox: { width: 500, height: 150 }, // wide + shallow box for barcodes
-                    aspectRatio: 1.7778, // 16:9 ratio helps linear codes
-                    videoConstraints: {
-                        facingMode: "environment", // back camera on mobile
-                        width: { ideal: 1920 },     // request Full HD
-                        height: { ideal: 1080 },
-                        advanced: [{ zoom: 2.0 }]   // try 2x digital zoom (if supported)
+                    fps: 10,
+                    qrbox: (viewfinderWidth, viewfinderHeight) => {
+                        const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                        const qrboxSize = Math.floor(minEdge * 0.8);
+                        return { width: qrboxSize, height: qrboxSize * 0.5 };
                     }
                 },
                 onScanSuccess,
@@ -928,7 +935,7 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
             .then(() => {
                 isScannerRunning = true;
                 startScannerBtn.classList.add('hidden');
-                scannerStatus.textContent = "Scanning for barcodes...";
+                scannerStatus.textContent = "Scanning...";
                 reader.style.borderColor = "#4CAF50";
             })
             .catch(err => {
@@ -945,8 +952,6 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
         startScannerBtn.classList.remove('hidden');
     });
 }
-
-
 
             function stopScanner() {
                 if (!html5QrCode || !isScannerRunning) return;
