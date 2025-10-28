@@ -720,21 +720,20 @@ const altContainer = $('#product-alternatives-container');
     if (alternatives && alternatives.length > 0) {
         alternatives.forEach(alt => {
             
-            // --- START OF CHANGES ---
+            // --- THIS IS THE ONLY PART THAT CHANGED ---
 
             const altCard = ` 
                 <div class="flex-shrink-0 w-48 bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
-                     onclick="handleBarcodeScan('${alt.barcode}')"> 
+                     onclick="closeModal(); handleBarcodeScan('${alt.barcode}')"> 
                      
                     <img src="${alt.image_url || 'https://placehold.co/200x200/eeeeee/cccccc?text=No+Image'}" alt="${alt.name}" class="w-full h-24 object-cover rounded-md mb-3">
                     <h5 class="font-semibold text-sm">${alt.name}</h5>
                     <p class="text-xs text-gray-500 mb-2">${alt.brand_name}</p>
-                    
                     <div class="text-lg font-bold text-gray-800">${alt.score}</div>
                 </div>
             `;
             
-            // --- END OF CHANGES ---
+            // --- END OF CHANGE ---
 
     altList.innerHTML += altCard;
         });
@@ -747,7 +746,6 @@ altContainer.classList.add('hidden');
 productModal.classList.remove('hidden');
     productModal.querySelector('.modal-content').classList.add('scale-100');
 }
-
             /**
              * Renders the user's dashboard with their info.
              */
