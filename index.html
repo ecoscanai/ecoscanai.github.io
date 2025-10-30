@@ -814,7 +814,8 @@ function renderProductModal(data) {
     // Main product price
     const priceEl = $('product-price');
     if (priceEl) {
-        priceEl.textContent = `$${product.price.toFixed(2)}`;
+        priceEl.textContent = `৳${product.price.toFixed(2)}`;
+
     }
 
     // Main score
@@ -846,7 +847,7 @@ function renderProductModal(data) {
  <h5 class="font-semibold text-sm">${alt.name}</h5>
  <p class="text-xs text-gray-500 mb-2">${alt.brand_name}</p>
  <div class="text-lg font-bold text-gray-800 mb-1">${alt.score}</div>
- <p class="text-md font-semibold text-green-600">$${alt.price.toFixed(2)}</p>
+ <p class="text-md font-semibold text-green-600">৳${alt.price.toFixed(2)}</p>
  </div>
  `;
         });
@@ -1330,7 +1331,7 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
                 document.getElementById('product-img').src = product.image_url || 'https://placehold.co/400x400/eeeeee/cccccc?text=No+Image';
                 document.getElementById('product-name').textContent = product.name;
                 document.getElementById('product-brand').textContent = product.brand_name || 'N/A';
-                document.getElementById('product-price').textContent = product.price ? `$${product.price.toFixed(2)}` : 'Price N/A';
+                document.getElementById('product-price').textContent = product.price ? `৳${product.price.toFixed(2)}` : 'Price N/A';
                 document.getElementById('product-barcode').textContent = product.barcode;
                 
                 document.getElementById('product-score').textContent = score || 0;
@@ -1353,7 +1354,7 @@ renderProductModal(data); // <-- ADJUSTED: Pass the whole response object
                                 <img src="${alt.image_url || 'https://placehold.co/200x200/eeeeee/cccccc?text=Alt'}" class="w-full h-24 object-cover rounded mb-2">
                                 <p class="font-semibold text-sm truncate">${alt.name}</p>
                                 <p class="text-xs text-gray-500 truncate">${alt.brand_name || 'N/A'}</p>
-                                <p class="text-lg font-bold text-leaf-green mt-1">$${alt.price ? alt.price.toFixed(2) : 'N/A'}</p>
+                                <p class="text-lg font-bold text-leaf-green mt-1">৳${alt.price ? alt.price.toFixed(2) : 'N/A'}</p>
                             </div>
                         `;
                         alternativesList.innerHTML += altCard;
